@@ -25,6 +25,9 @@ class MSTag
 	var $Credentials;
 	public $http_status;
 	public $error;
+	public $errorCode;
+	public $response;
+	protected $args;
 
 	public function __construct($userCredential)
 	{
@@ -33,6 +36,8 @@ class MSTag
 
 	function GetQueryString($args)
 	{
+		$this->args = $args;
+		
 		$query_string = "";
 
 		foreach ($args as $key => $value)
@@ -44,7 +49,7 @@ class MSTag
 	}
 
 
-	public function MakeRequest($url)
+	public function MakeRequest($url, $raw=false)
 	{
 		$curl_handle = curl_init();
 		curl_setopt($curl_handle, CURLOPT_URL, $url);
@@ -63,7 +68,7 @@ class MSTag
 		}
 
 		curl_close($curl_handle);
-		return $this->parseOutput($output);
+		return $raw ? $output : $this->parseOutput($output);
 	}
 
 
@@ -180,8 +185,8 @@ class MSTag
 		$qs= $this->GetQueryString($params);
 		$url = $this->base . "/GenerateBarcode?$qs";
 			
-		$result = $this->MakeRequest($url);
-		return $result;
+		$result = $this->MakeRequest($url, true);
+		return base64_decode($result);
 	}
 	public function CreateCategory($category)
 	{
@@ -382,14 +387,28 @@ class MSTag
 	 */
 	private function parseOutput($strOutput)
 	{
+		$this->response = $strOutput;
+		
 		if (strpos($strOutput, 'Token does not exist') !== false)
 		{
 			$this->error = sprintf($GLOBALS['TL_LANG']['ERR']['ms_token'], $this->Credentials->accessToken);
+			$this->errorCode = 403;
 			return false;
 		}
 		
-		echo $strOutput;
-		exit;
+		if (strpos($strOutput, 'Category with this name not exist') !== false)
+		{
+			$this->error = sprintf($GLOBALS['TL_LANG']['ERR']['ms_categoryMissing'], $this->args['cn']);
+			$this->errorCode = 404;
+			return false;
+		}
+		
+		if (strpos($strOutput, 'Tag not found') !== false)
+		{
+			$this->error = sprintf($GLOBALS['TL_LANG']['ERR']['ms_tagMissing'], $this->args['tt']);
+			$this->errorCode = 404;
+			return false;
+		}
 		
 		return true;
 	}

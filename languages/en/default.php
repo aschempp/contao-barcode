@@ -35,5 +35,7 @@ $GLOBALS['TL_LANG']['CTE']['barcode']	= array('Barcode');
 /**
  * Errors
  */
-$GLOBALS['TL_LANG']['ERR']['ms_token'] = 'Invalid authentication. Token "%s" does not exist.';
+$GLOBALS['TL_LANG']['ERR']['ms_token']				= 'Invalid authentication. Token "%s" does not exist.';
+$GLOBALS['TL_LANG']['ERR']['ms_categoryMissing']	= 'API error: Category "%s" does not exist.';
+$GLOBALS['TL_LANG']['ERR']['ms_tagMissing']			= 'API error: Tag "%s" does not exist.';
 

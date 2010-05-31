@@ -62,8 +62,11 @@ class Barcode extends Hybrid
 				$this->Template->src = $this->generateQRCode($this->qr_data, $this->qr_level, $this->qr_version);
 				break;
 				
-			case 'mstag':
-				$this->Template->src = $this->generateMSTag();
+			case 'ms_URITag':
+			case 'ms_FreeTextTag':
+			case 'ms_DialerTag':
+			case 'ms_VCardTag':
+				$this->Template->src = $this->generateMSTag($this->ms_token, $this->ms_title, $this->ms_category, $this->ms_image, $this->ms_size, $this->ms_decoration, $this->ms_blackAndWhite);
 				break;
 		}
 	}
@@ -777,11 +780,19 @@ class Barcode extends Hybrid
 	}
 	
 	
-	private function generateMSTag($strToken, $strTagName, $strImageType='png', $intSize=1, $strCategory='Main', $strDecoration='HCCBRP_DECORATION_NONE', $blnBlackAndWhite=false)
+	private function generateMSTag($strToken, $strTagName, $strCategory='Main', $strImageType='png', $intSize=1, $strDecoration='HCCBRP_DECORATION_NONE', $blnBlackAndWhite=false)
 	{
+		$strFile = 'system/html/' . md5($strTagName.'-'.$strCategory.'-'.$intSize.$strDecoration.$blnBlackAndWhite) . '.' . $strImageType;
+		
 		require_once(TL_ROOT . '/system/modules/barcode/MSTagLib/MSTag.php');
 		
 		$objAPI = new MSTag(new UserCredential($strToken));
+		$varBuffer = $objAPI->GenerateBarcode($strCategory, $strTagName, $strImageType, $intSize, $strDecoration, ($blnBlackAndWhite ? 'True' : 'False'));
+		
+		$objFile = new File($strFile);
+		$objFile->write($varBuffer);
+		
+		return $strFile;
 	}
 }
 
